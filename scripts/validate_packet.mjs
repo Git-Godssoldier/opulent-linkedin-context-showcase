@@ -1,0 +1,57 @@
+#!/usr/bin/env node
+
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
+const target = resolve(process.cwd(), process.argv[2] ?? "artifacts/showcase-packet.json");
+const packet = JSON.parse(await readFile(target, "utf8"));
+const failures = [];
+
+function check(condition, message) {
+  if (!condition) failures.push(message);
+}
+
+check(packet.schema_version === "1.0.0", "schema_version must be 1.0.0");
+check(packet.source_mode === "public_validation_baseline" || packet.source_mode === "contextdev_live", "invalid source_mode");
+check(packet.scope?.requested === 3, "requested count must be 3");
+check(packet.scope?.deduplicated === 3, "deduplicated count must be 3");
+check(packet.scope?.unique_company_count === 1, "sample must contain one sponsor company");
+check(packet.scope?.discovery_expansion === 0, "skill must not expand discovery");
+check(packet.profiles?.length === 3, "exactly three profiles are required");
+check(packet.context_operations?.length === 3, "one Context operation per profile is required");
+check(/firm-level/i.test(packet.sponsor?.boundary ?? ""), "sponsor boundary must state firm-level scope");
+
+const urls = new Set();
+for (const profile of packet.profiles ?? []) {
+  check(profile.validation_status === "public_identity_validated", `${profile.id}: identity not validated`);
+  check(profile.organization === "Goodwin", `${profile.id}: unexpected organization`);
+  check(/^https:\/\/www\.linkedin\.com\/in\//.test(profile.linkedin_url), `${profile.id}: invalid LinkedIn URL`);
+  check(/^https:\/\/www\.goodwinlaw\.com\//.test(profile.official_url), `${profile.id}: missing official Goodwin corroboration`);
+  check(!urls.has(profile.linkedin_url), `${profile.id}: duplicate LinkedIn URL`);
+  urls.add(profile.linkedin_url);
+}
+
+for (const operation of packet.context_operations ?? []) {
+  check(operation.method === "POST", `${operation.profile_id}: method must be POST`);
+  check(operation.endpoint === "https://api.context.dev/v1/people/retrieve", `${operation.profile_id}: wrong endpoint`);
+  check(Boolean(operation.body?.identifiers?.linkedinUrl), `${operation.profile_id}: missing identifiers.linkedinUrl`);
+  check(operation.write_policy === "artifact_only_no_crm_write", `${operation.profile_id}: unsafe write policy`);
+  check(operation.status !== "executed" || Boolean(operation.receipt), `${operation.profile_id}: executed operation has no receipt`);
+}
+
+const serialized = JSON.stringify(packet).toLowerCase();
+for (const forbidden of ["email_address", "phone_number", "home_address", "bearer ctxt_secret_"]) {
+  check(!serialized.includes(forbidden), `forbidden public field/token marker: ${forbidden}`);
+}
+
+if (packet.source_mode === "public_validation_baseline") {
+  check(packet.scope.executed === 0, "baseline cannot claim executed Context calls");
+  check(packet.context_operations.every((operation) => operation.status !== "executed"), "baseline operation cannot be executed");
+}
+
+if (failures.length) {
+  process.stderr.write(`${JSON.stringify({ status: "failed", target, failures }, null, 2)}\n`);
+  process.exitCode = 1;
+} else {
+  process.stdout.write(`${JSON.stringify({ status: "valid", target, profiles: packet.profiles.length, operations: packet.context_operations.length }, null, 2)}\n`);
+}

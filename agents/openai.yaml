@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opulent LinkedIn Context Showcase"
+  short_description: "Enrich known public LinkedIn profiles with Context.dev"
+  default_prompt: "Use $opulent-linkedin-context-showcase to validate a bounded set of public LinkedIn identities, retrieve them through Context.dev, preserve receipts, and render the evidence-safe dither dashboard."

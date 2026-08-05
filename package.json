@@ -1,0 +1,20 @@
+{
+  "name": "opulent-linkedin-context-showcase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:packet": "node scripts/build_showcase.mjs",
+    "validate": "node scripts/validate_packet.mjs",
+    "context:dry-run": "node scripts/contextdev_people.mjs --dry-run",
+    "context:live": "node scripts/scenario_contextdev_three_profiles.mjs",
+    "context:probe": "node scripts/contextdev_auth_probe.mjs",
+    "dashboard:install": "npm --prefix dashboard install",
+    "dashboard:build": "npm --prefix dashboard run build",
+    "test": "node --test tests/*.test.mjs",
+    "selftest": "npm run test && npm run context:dry-run && npm run build:packet && npm run validate && npm --prefix dashboard run typecheck && npm --prefix dashboard run lint && npm run dashboard:build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
