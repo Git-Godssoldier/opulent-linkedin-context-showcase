@@ -102,7 +102,7 @@ function coverage(profile) {
 
 const packet = {
   schema_version: "1.0.0",
-  generated_at: new Date().toISOString(),
+  generated_at: manifest?.generated_at ?? baseline.checked_at,
   source_mode: executedCount > 0 ? "contextdev_live" : baseline.source_mode,
   client: baseline.client,
   objective: baseline.objective,

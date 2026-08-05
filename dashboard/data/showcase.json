@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-05T21:12:45.100Z",
+  "generated_at": "2026-08-05T19:00:00Z",
   "source_mode": "public_validation_baseline",
   "client": "Opulent",
   "objective": "Demonstrate evidence-safe Context.dev known-person retrieval and visualization for three public profiles affiliated with a publicly documented VC Village sponsor.",
