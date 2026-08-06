@@ -1,0 +1,146 @@
+{
+  "id": null,
+  "name": null,
+  "linkedin_url": null,
+  "roster": {
+    "organization": null,
+    "role": null,
+    "city": null
+  },
+  "identity": {
+    "confidence": null,
+    "validation_status": null,
+    "roster_variance": null,
+    "alternates_considered": []
+  },
+  "required_fields": {
+    "email": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "phone": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "industries": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "title": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "organization": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "location": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "linkedin_headline": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "linkedin_about": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "actively_investing": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    },
+    "changes_since_last": {
+      "value": null,
+      "state": "pending_retrieval",
+      "confidence": "Unknown",
+      "source": null,
+      "source_url": null,
+      "observed_at": null
+    }
+  },
+  "career": {
+    "experience": [],
+    "education": [],
+    "skills": [],
+    "tenure_current_months": null
+  },
+  "firm": {
+    "domain": null,
+    "description": null,
+    "industries_eic": [],
+    "naics": [],
+    "sic": [],
+    "socials": {},
+    "hq_address": null,
+    "logo_url": null,
+    "palette": [],
+    "screenshot_url": null,
+    "typography": null
+  },
+  "investment_signal": {
+    "recent_financings": [],
+    "fund_status": null,
+    "portfolio_themes": [],
+    "check_size_band": null
+  },
+  "public_activity": {
+    "talks": [],
+    "writing": [],
+    "podcasts": [],
+    "press": []
+  },
+  "relationships": {
+    "co_investors": [],
+    "shared_affiliations": [],
+    "prior_interactions": []
+  },
+  "operation": {
+    "natural_language_job": null,
+    "method": "POST",
+    "endpoint": null,
+    "body": {},
+    "expected_response": null,
+    "write_policy": "artifact_only_no_crm_write",
+    "status": "proposed",
+    "receipt": null,
+    "credits": null
+  },
+  "unknowns": []
+}

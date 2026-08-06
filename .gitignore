@@ -9,3 +9,4 @@ dashboard/.next/
 # Client target lists are never committed. Only the synthetic example ships.
 targets/*.csv
 !targets/example-targets.csv
+!targets/roster.csv

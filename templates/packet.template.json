@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "stage": null,
+  "client": null,
+  "objective": null,
+  "source_mode": null,
+  "generated_at": null,
+  "scope": {
+    "rows_in": null,
+    "accepted": null,
+    "rejected": null,
+    "unique_people": null,
+    "unique_companies": null,
+    "planned_calls": null,
+    "credit_budget": null,
+    "credits_spent": null
+  },
+  "excluded": [],
+  "people": [],
+  "firms": [],
+  "context_operations": [],
+  "data_health": {
+    "field_coverage_pct": null,
+    "null_rates": {},
+    "conflicts": null,
+    "identity_resolution_pct": null,
+    "quarantined": null
+  },
+  "unknowns": []
+}

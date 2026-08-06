@@ -1,171 +1,142 @@
 ---
 name: opulent-linkedin-context-showcase
-description: Build an evidence-safe Opulent showcase from a small, user-approved set of known public LinkedIn profile URLs. Use when asked to demonstrate Context.dev POST /people/retrieve, validate sponsor-affiliated public identities, preserve execution receipts, normalize professional profile fields, redact contact data, or render the included dither-chart dashboard. This skill is not for discovering people, bypassing LinkedIn controls, bulk scraping, LP research, sponsor prospecting, outreach, CRM writes, or relationship inference.
+description: Take a supplied roster of people with LinkedIn URLs and run it end to end — validate identities, retrieve and extract structured profiles through Context.dev, assemble a provenance-carrying dossier per person, and render a Dither Kit dashboard. Use when demonstrating Opulent and Context.dev enrichment on a known list, building an evidence-backed person dossier, or producing a client-ready extraction report. This skill works a list you already have; it does not discover people, bypass access controls, bulk scrape, or send outreach.
+license: MIT
 ---
 
 # Opulent LinkedIn Context Showcase
 
-Turn a bounded list of verified public LinkedIn URLs into an auditable Context.dev retrieval run and a polished local dashboard. The included sample uses three Goodwin professionals because a public VC Village NYC event page names Goodwin as a sponsor. That proves firm-level sponsor affiliation only; it does not prove that any profiled person sponsored, hosted, attended, or endorsed the event.
+Turn a roster into a dossier. A list of names and URLs goes in; a set of source-backed person records and a dashboard that shows the whole chain comes out.
+
+The demonstration is the chain, not the data. Anyone can print a profile. What this shows is that each identity was fixed before retrieval, each field carries the page it came from, each unknown is named rather than filled, and the run reports what it cost.
 
 ## Before you start
 
-Read:
+Read in this order:
 
-1. `references/operation-contract.md` for the exact Context.dev call and receipt rules.
-2. `references/evidence-policy.md` for identity, sponsor, privacy, and claim boundaries.
-3. `references/dashboard-contract.md` before changing the visual output.
+1. `references/contextdev-capabilities.md` — every provider call, its credit cost, and which one belongs at each stage.
+2. `references/dossier-contract.md` — the output shape, the ten required fields, and the rules the validator enforces.
+3. `references/dashboard-brief.md` — the two-layer dashboard, the chart contract, and what may never be styled as verified.
+4. `references/evidence-policy.md` — identity, claim, and privacy boundaries.
 
-Require all of the following for a live run:
+Two templates define the output shape and ship empty on purpose:
 
-- a small user-approved set of exact LinkedIn profile URLs;
-- a lawful professional-research purpose;
-- `CONTEXT_DEV_API_KEY` in the server-side environment; and
-- Context.dev account access to the private-alpha people retrieval endpoint.
+- `templates/dossier.template.json` — one person: the ten required fields plus identity integrity, career shape, firm intelligence, investment signal, public activity, and relationships. Every value null, every field carrying its own state.
+- `templates/packet.template.json` — the run: scope, excluded rows, people, firms, operation ledger, data health, unknowns.
 
-If authentication or endpoint access is missing, stop the provider run with an explicit blocked receipt. You may still render a public-source validation baseline, but label it `public_validation_baseline`; never present it as Context output.
+Fill them. Do not reshape them — the validator and the dashboard both read this contract.
 
-## Workflow
+## What you need
 
-### 1. Fix the scope before retrieval
+- A roster with **exact LinkedIn profile URLs**. `targets/roster.csv` ships as the working input.
+- `CONTEXT_DEV_API_KEY` in the server-side environment, and access to the person-retrieval endpoint.
+- A credit budget agreed before the run.
 
-Use `user_list` mode. Normalize and deduplicate exact LinkedIn URLs. Do not guess a missing URL, expand the cohort, search for additional people, or accept a name-only match.
+Missing credentials block retrieval only. Continue through validation and preparation, and report the blocked stage precisely rather than substituting for it.
 
-For the bundled showcase, the maximum is three unique people, three `POST /people/retrieve` calls, zero company calls, zero web extraction calls, and zero monitors.
+## Procedure
 
-### 1b. Loading a client target list
-
-A roster arrives as name, owner, city, organization, role — the shape a community actually
-keeps. Load it and let it reject what it cannot identify:
+### 1. Load and validate the roster
 
 ```bash
-node scripts/load_targets.mjs targets/<file>.csv --out fixtures/<cohort>.json
+node scripts/load_targets.mjs targets/roster.csv --out artifacts/cohort.json
 ```
 
-**A row without an exact LinkedIn profile URL is rejected, never resolved by search.** A name
-and an employer is not an identity. The wrong match here does not stay local — it becomes an
-enrichment record and then a platform writeback against the wrong person. Supplying the URL is
-the client's step, from the platform export that already holds it.
+Every row needs an exact `linkedin.com/in/…` URL. **A row without one is rejected, never resolved by search.** A name and an employer is not an identity — several people share any given name, and the wrong match propagates into a dossier and then into whatever consumes it.
 
-The loader exits non-zero and names every blocked row, so a partially-identified list fails
-loudly instead of silently shrinking the cohort.
+Rejections are kept with their reasons and surface in the dashboard. The loader exits non-zero so a partial roster fails loudly instead of quietly shrinking.
 
-Client lists stay out of the repository. `targets/*.csv` is gitignored except the synthetic
-`example-targets.csv`, which exists to show the column shape.
+*Done when: every row is accepted with a normalized URL or rejected with a reason.*
 
-### 2. Validate identity and affiliation separately
-
-For each person, retain:
-
-- the public LinkedIn URL supplied or approved for retrieval;
-- an official employer biography that corroborates the person and current role;
-- the employer name and role exactly supported by the sources; and
-- a validation timestamp.
-
-Retain sponsor proof as a separate firm-level record. Never convert `Goodwin sponsored a VC Village event` into `this Goodwin professional sponsored or attended it`.
-
-### 3. Execute Context.dev once per unique URL
-
-Run:
+### 2. Prepare the cohort
 
 ```bash
-npm run context:dry-run
-CONTEXT_DEV_API_KEY=ctxt_secret_... npm run context:live
+node scripts/prepare_cohort.mjs artifacts/cohort.json --out artifacts/prepared.json
 ```
 
-The live script calls exactly:
+Each accepted target becomes one planned retrieval operation and one dossier record with all ten required fields at `pending_retrieval`. Nothing executes yet. Set the credit budget here from unique people and unique firms, and state it before spending it.
 
-```http
-POST https://api.context.dev/v1/people/retrieve
-Authorization: Bearer $CONTEXT_DEV_API_KEY
-Content-Type: application/json
-```
+*Done when: one planned operation per person, one record per person, and a budget the user has seen.*
 
-with `identifiers.linkedinUrl`, a bounded timeout, and stable tags. Never log the bearer token. Retry only 408, 429, and 500. One failed person must not erase successful receipts for the others.
+### 3. Warm the cache
 
-### 3b. Return the ten enrichment fields
+Fire prefetch for every unique firm domain as soon as it is known. It is free and fire-and-forget — never block the run on it.
 
-A recurring investor refresh is judged on a fixed field list, so every profile carries all ten
-whether or not a value was found. A field that is absent from the packet is worse than one that
-is present and `unknown`: the consumer cannot tell "we looked and found nothing" from "we never
-looked".
+*Done when: every unique domain has been prefetched or recorded as unavailable.*
 
-| Field | Showcase behaviour |
-| --- | --- |
-| `email` | `not_retrieved`, value null — contact data is withheld here |
-| `phone` | `not_retrieved`, value null — same reason, optional field |
-| `industries` | Retrieved from the public employer profile |
-| `title` | Retrieved |
-| `organization` | Retrieved |
-| `location` | Retrieved; a live call refines it |
-| `linkedin_headline` | Needs a live retrieval; `unknown` without one |
-| `linkedin_about` | Retrieved |
-| `actively_investing` | `unknown` until a dated signal inside the recency window supports it |
-| `changes_since_last` | `baseline` on a first observation — a change list needs a prior accepted refresh |
+### 4. Retrieve each person
 
-Two rules the validator enforces rather than trusts:
+One person-retrieval call per unique LinkedIn URL. Never more than one per identity, and never a second call for an alternate spelling.
 
-- **Contact values stay null in showcase mode.** These are real people's public profiles, and a
-  demonstration has no business publishing their address or number. The state machine is the
-  deliverable; the values are not. A production run resolves them and marks each `verified`,
-  `accept_all`, `unknown`, `bounced`, or `candidate` before any writeback.
-- **`actively_investing` may only be `false` with retrieved evidence.** Absence downgrades to
-  `unknown`. A job title is not evidence, and silence is not a negative.
+Store the raw response privately under a gitignored path, keyed by run. Record status, latency, and error classification per call. A call is `executed` only with an HTTP response **and** a receipt path; otherwise it is `blocked_missing_credentials`, `blocked_endpoint_access`, or `failed` — precisely, in that vocabulary.
 
-`field_coverage` scores against these ten, so the baseline reports 50% honestly rather than
-scoring itself against the fields it happened to fill.
+*Done when: every person has a terminal status and, where executed, a receipt on disk.*
 
-### 4. Preserve raw receipts privately
+### 5. Resolve each firm once
 
-Live responses belong under `.scratch/contextdev/<run-id>/`, which is gitignored. Preserve per-person HTTP status, safe rate-limit headers, latency, request body, response body, and error classification. Do not publish raw provider responses by default.
+One brand resolution per canonical domain, reused across everyone at that firm. Add industry codes. Where the dossier will carry the firm's identity, take the logo, palette, and a screenshot.
 
-Never label a call `executed` without an HTTP response and a receipt path. Use `blocked_missing_credentials`, `blocked_endpoint_access`, `failed`, or `executed` precisely.
+*Done when: every unique domain has one firm record, and no domain was resolved twice.*
 
-### 5. Build the public packet
+### 6. Gather dated evidence
 
-Run:
+For the fields no profile can answer — whether someone is still actively investing, what changed recently — search for dated public signals inside the recency window, then extract against a schema with fact-checking on. Extraction is what turns a search result into a citable claim.
+
+**Absence is a finding.** No dated signal inside the window means `unknown`. It never means `false`.
+
+*Done when: every evidence-based field is either supported by a dated source or explicitly unknown.*
+
+### 7. Assemble the dossiers
+
+Fill the record from steps 4–6. Every field gets its value, state, confidence, source, source URL, and observation date. Where the roster and the public record disagree, record the variance rather than overwriting either.
+
+Contact fields come only from a verification provider. A pattern-inferred address is `candidate` and stays out of anything downstream until verification promotes it.
+
+*Done when: every person carries all ten required fields, and every `Verified` field carries a source URL.*
+
+### 8. Validate
 
 ```bash
-npm run build:packet
-# After a live run:
-npm run build:packet -- --manifest .scratch/contextdev/<run-id>/manifest.json
-npm run validate
+node scripts/validate_packet.mjs artifacts/packet.json
 ```
 
-The builder emits `artifacts/showcase-packet.json` and `dashboard/data/showcase.json`. It strips personal email, phone, address, inferred contact routes, and any unapproved free text. Unsupported fields remain `Unknown`.
+Exits non-zero on any breach: a missing field, a contact value without a verification source, `actively_investing: false` without dated evidence, a `Verified` field with no URL, a low-confidence identity with no recorded variance, an `executed` operation with no receipt, or a secret anywhere in the packet.
 
-### 6. Render and inspect the dashboard
+*Done when: the validator exits zero.*
 
-Run:
+### 9. Render the dashboard
 
-```bash
-npm run dashboard:install
-npm run dashboard:build
-npm --prefix dashboard run dev
-```
+Build the two-layer dashboard and one dossier route per person. Decision layer first — scope, cohort, analytics, excluded rows. Audit layer collapsed — operation ledger, data health, provenance appendix, unknowns.
 
-Inspect desktop and narrow layouts. Confirm that the provider status, source mode, sponsor boundary, profile links, official corroboration, and unknowns remain visible. A blocked Context run must never look like a successful extraction.
+Use the committed Dither Kit components for every chart.
 
-## Required output
+*Done when: the export builds, the overview and one dossier have been inspected at desktop and at 390px, and the console is clean.*
 
-Return:
+### 10. Report the run
 
-- cohort counts: requested, deduplicated, eligible, executed, blocked, and failed;
-- one Context operation ledger row per unique LinkedIn URL;
-- receipt paths for live calls, or the exact blocked reason;
-- normalized professional fields and visible unknowns;
-- sponsor evidence with the firm-level boundary;
-- the dashboard artifact/build result; and
-- source links and checked dates.
+State what was retrieved, what was blocked and why, what it cost against budget, and what remains unknown. The unknowns section earns more trust than the findings do.
 
-## Safety and non-goals
+*Done when: counts, credits, blocks, and unknowns are all stated.*
 
-- Do not automate LinkedIn login, CAPTCHA solving, cookie reuse, rate-limit evasion, or authenticated page scraping.
-- Do not collect or infer personal emails, phone numbers, home addresses, family data, protected traits, or sensitive classifications.
-- Do not use profile activity to infer intent, political views, health, religion, or private relationships.
-- Do not send outreach, write to CRM, rank people for employment, or make eligibility decisions.
-- Do not include LP workflows, fund-return research, sponsor prospecting, Ricochet workflows, or unrelated GTM discovery.
-- Respect LinkedIn, Context.dev, source-site, and applicable data-protection terms.
+## Note on the bundled prior demo
 
-## Verification
+`fixtures/public-profile-baseline.json`, the `Goodwin` assertions in `scripts/validate_packet.mjs` and `tests/contracts.test.mjs`, and the sponsor section in `dashboard/app/page.tsx` belong to an earlier three-profile demonstration. They are retained so the repository keeps building, and they are **not** this skill's input. The roster is. Re-point them at the roster before the first client-facing run, or delete them.
 
-Run `npm run selftest`. A fully live provider scenario additionally requires `npm run context:live` with valid credentials and endpoint access. A passing fixture/build test proves the skill and dashboard mechanics; it does not prove live Context extraction.
+## Boundaries
+
+- **A supplied list only.** No discovery, no cohort expansion, no name-only matching.
+- **Public profiles only.** Nothing behind a login, a CAPTCHA, a paywall, or an email gate.
+- **Nothing invented.** No guessed email, phone, URL, activity status, or relationship. An absent value is reported absent.
+- **No claim beyond the evidence.** A person appearing in this cohort is not thereby a member, attendee, customer, or endorser of anything. Firm-level facts stay at the firm level.
+- **Contact data is handled, never published.** Values live in the private record; the public artifact carries the state.
+- **Nothing sends.** This skill produces a dossier and a dashboard. It writes to no CRM and messages no one.
+
+## Failure modes worth naming
+
+| Symptom | Cause | Response |
+| --- | --- | --- |
+| A person resolves to the wrong profile | Name-only match slipped through | Reject the row; the loader should have caught it |
+| Every field returns unknown for one person | URL is valid but the profile is restricted | Record `blocked` with the observed state; move on |
+| Credit spend overruns the budget | A firm resolved once per person instead of once per domain | Dedupe by canonical domain before step 5 |
+| `actively_investing` reads false across the cohort | Absence treated as a negative | Only dated evidence sets false; absence is unknown |
+| The dashboard shows green for a blocked call | Status styled by presence rather than value | Style by status; blocked is never a shade of success |
