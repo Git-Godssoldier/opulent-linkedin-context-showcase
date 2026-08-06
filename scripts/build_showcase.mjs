@@ -95,9 +95,61 @@ const executedCount = [...contextResults.values()].filter((result) => result.sta
 const blockedCount = [...contextResults.values()].filter((result) => result.status.startsWith("blocked_")).length;
 const failedCount = profiles.length - executedCount - blockedCount;
 
-function coverage(profile) {
-  const fields = [profile.name, profile.title, profile.organization, profile.location, profile.summary];
-  return Math.round((fields.filter(Boolean).length / fields.length) * 100);
+/**
+ * The ten enrichment fields a recurring investor refresh has to return.
+ *
+ * Every field carries its own state so a consumer can tell a retrieved value from an
+ * absent one without inspecting the value. Contact fields are deliberately state-only in
+ * showcase mode: these are real people's public profiles, and a demonstration has no
+ * business publishing their address or number. The state machine is the deliverable, the
+ * values are not.
+ */
+function enrichmentFields(profile, result) {
+  const extract = result.extract ?? null;
+  const retrieved = result.status === "executed";
+  const from = (value, source) =>
+    value === null || value === undefined || value === ""
+      ? { state: "unknown", value: null, source: null }
+      : { state: "retrieved", value, source };
+
+  const publicSource = "public_employer_profile";
+  const liveSource = retrieved ? "contextdev_people_retrieve" : publicSource;
+
+  return {
+    email: {
+      state: "not_retrieved",
+      value: null,
+      reason: "Contact data is withheld in showcase mode. A production run resolves this field and marks it verified, accept_all, unknown, bounced, or candidate before any writeback.",
+    },
+    phone: {
+      state: "not_retrieved",
+      value: null,
+      reason: "Optional field. Withheld in showcase mode for the same reason as email.",
+    },
+    industries: from(profile.focus?.length ? profile.focus : null, publicSource),
+    title: from(profile.title, publicSource),
+    organization: from(profile.organization, publicSource),
+    location: from(extract?.profile?.location ?? profile.location, liveSource),
+    linkedin_headline: from(extract?.profile?.headline ?? null, liveSource),
+    linkedin_about: from(extract?.profile?.summary ?? profile.summary, liveSource),
+    actively_investing: {
+      state: "unknown",
+      value: null,
+      basis: "evidence_required",
+      reason: "Requires a dated public signal inside the recency window. Absence downgrades to unknown; it never implies false, and a job title alone is not evidence.",
+    },
+    changes_since_last: {
+      state: "baseline",
+      value: [],
+      reason: "First observation of this record. A change list needs a prior accepted refresh to diff against.",
+    },
+  };
+}
+
+function coverage(fields) {
+  const states = Object.values(fields).map((f) => f.state);
+  const present = states.filter((s) => s === "retrieved").length;
+  return Math.round((present / states.length) * 100);
 }
 
 const packet = {
@@ -121,14 +173,16 @@ const packet = {
   },
   profiles: profiles.map((profile, index) => {
     const result = contextResults.get(profile.id);
+    const fields = enrichmentFields(profile, result);
     return {
       ...profile,
+      enrichment_fields: fields,
       unknowns: result.status === "executed" ? [] : profile.unknowns,
       context_status: result.status,
       context_receipt: result.receipt,
       context_extract: result.extract,
       metrics: {
-        field_coverage: coverage(profile),
+        field_coverage: coverage(fields),
         identity_evidence: 100,
         employer_evidence: 100,
         role_evidence: 92 - index * 3,

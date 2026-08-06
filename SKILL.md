@@ -62,6 +62,38 @@ Content-Type: application/json
 
 with `identifiers.linkedinUrl`, a bounded timeout, and stable tags. Never log the bearer token. Retry only 408, 429, and 500. One failed person must not erase successful receipts for the others.
 
+### 3b. Return the ten enrichment fields
+
+A recurring investor refresh is judged on a fixed field list, so every profile carries all ten
+whether or not a value was found. A field that is absent from the packet is worse than one that
+is present and `unknown`: the consumer cannot tell "we looked and found nothing" from "we never
+looked".
+
+| Field | Showcase behaviour |
+| --- | --- |
+| `email` | `not_retrieved`, value null — contact data is withheld here |
+| `phone` | `not_retrieved`, value null — same reason, optional field |
+| `industries` | Retrieved from the public employer profile |
+| `title` | Retrieved |
+| `organization` | Retrieved |
+| `location` | Retrieved; a live call refines it |
+| `linkedin_headline` | Needs a live retrieval; `unknown` without one |
+| `linkedin_about` | Retrieved |
+| `actively_investing` | `unknown` until a dated signal inside the recency window supports it |
+| `changes_since_last` | `baseline` on a first observation — a change list needs a prior accepted refresh |
+
+Two rules the validator enforces rather than trusts:
+
+- **Contact values stay null in showcase mode.** These are real people's public profiles, and a
+  demonstration has no business publishing their address or number. The state machine is the
+  deliverable; the values are not. A production run resolves them and marks each `verified`,
+  `accept_all`, `unknown`, `bounced`, or `candidate` before any writeback.
+- **`actively_investing` may only be `false` with retrieved evidence.** Absence downgrades to
+  `unknown`. A job title is not evidence, and silence is not a negative.
+
+`field_coverage` scores against these ten, so the baseline reports 50% honestly rather than
+scoring itself against the fields it happened to fill.
+
 ### 4. Preserve raw receipts privately
 
 Live responses belong under `.scratch/contextdev/<run-id>/`, which is gitignored. Preserve per-person HTTP status, safe rate-limit headers, latency, request body, response body, and error classification. Do not publish raw provider responses by default.

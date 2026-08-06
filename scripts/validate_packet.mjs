@@ -29,6 +29,27 @@ for (const profile of packet.profiles ?? []) {
   check(/^https:\/\/www\.goodwinlaw\.com\//.test(profile.official_url), `${profile.id}: missing official Goodwin corroboration`);
   check(!urls.has(profile.linkedin_url), `${profile.id}: duplicate LinkedIn URL`);
   urls.add(profile.linkedin_url);
+
+  // The ten fields a recurring investor refresh must return. A field that is absent from the
+  // packet is worse than one that is present and unknown: the consumer cannot tell the
+  // difference between "we looked and found nothing" and "we never looked".
+  const REQUIRED_FIELDS = [
+    "email", "phone", "industries", "title", "organization",
+    "location", "linkedin_headline", "linkedin_about",
+    "actively_investing", "changes_since_last",
+  ];
+  const fields = profile.enrichment_fields ?? {};
+  for (const name of REQUIRED_FIELDS) {
+    check(Boolean(fields[name]), `${profile.id}: missing enrichment field "${name}"`);
+    check(typeof fields[name]?.state === "string", `${profile.id}: field "${name}" has no state`);
+  }
+  // Showcase mode publishes the contact state machine, never a real person's contact details.
+  for (const name of ["email", "phone"]) {
+    check(fields[name]?.value === null, `${profile.id}: ${name} must stay null in showcase mode`);
+  }
+  // Absence never implies inactivity.
+  check(fields.actively_investing?.value !== false || fields.actively_investing?.state === "retrieved",
+    `${profile.id}: actively_investing may only be false with retrieved evidence`);
 }
 
 for (const operation of packet.context_operations ?? []) {

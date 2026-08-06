@@ -44,3 +44,33 @@ test("fixture keeps sponsor and individual claims separate", () => {
   assert.ok(fixture.profiles.every((profile) => profile.organization === "Goodwin"));
   assert.ok(fixture.profiles.every((profile) => profile.validation_status === "public_identity_validated"));
 });
+
+const packet = JSON.parse(
+  await readFile(resolve("artifacts/showcase-packet.json"), "utf8"),
+);
+
+const REQUIRED_ENRICHMENT_FIELDS = [
+  "email", "phone", "industries", "title", "organization",
+  "location", "linkedin_headline", "linkedin_about",
+  "actively_investing", "changes_since_last",
+];
+
+test("every profile returns all ten enrichment fields with a state", () => {
+  for (const profile of packet.profiles) {
+    for (const name of REQUIRED_ENRICHMENT_FIELDS) {
+      assert.ok(profile.enrichment_fields?.[name], `${profile.id} is missing ${name}`);
+      assert.equal(typeof profile.enrichment_fields[name].state, "string",
+        `${profile.id}.${name} has no state`);
+    }
+  }
+});
+
+test("contact values stay null and inactivity is never inferred", () => {
+  for (const profile of packet.profiles) {
+    const fields = profile.enrichment_fields;
+    assert.equal(fields.email.value, null, `${profile.id} published an email`);
+    assert.equal(fields.phone.value, null, `${profile.id} published a phone number`);
+    assert.notEqual(fields.actively_investing.value, false,
+      `${profile.id} asserted inactivity without retrieved evidence`);
+  }
+});

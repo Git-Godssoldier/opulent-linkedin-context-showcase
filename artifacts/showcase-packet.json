@@ -44,11 +44,68 @@
       "unknowns": [
         "No live Context.dev receipt in the committed baseline"
       ],
+      "enrichment_fields": {
+        "email": {
+          "state": "not_retrieved",
+          "value": null,
+          "reason": "Contact data is withheld in showcase mode. A production run resolves this field and marks it verified, accept_all, unknown, bounced, or candidate before any writeback."
+        },
+        "phone": {
+          "state": "not_retrieved",
+          "value": null,
+          "reason": "Optional field. Withheld in showcase mode for the same reason as email."
+        },
+        "industries": {
+          "state": "retrieved",
+          "value": [
+            "Technology companies",
+            "Life sciences",
+            "Venture financings"
+          ],
+          "source": "public_employer_profile"
+        },
+        "title": {
+          "state": "retrieved",
+          "value": "Partner",
+          "source": "public_employer_profile"
+        },
+        "organization": {
+          "state": "retrieved",
+          "value": "Goodwin",
+          "source": "public_employer_profile"
+        },
+        "location": {
+          "state": "retrieved",
+          "value": "New York",
+          "source": "public_employer_profile"
+        },
+        "linkedin_headline": {
+          "state": "unknown",
+          "value": null,
+          "source": null
+        },
+        "linkedin_about": {
+          "state": "retrieved",
+          "value": "Goodwin describes Andrew Pusar as a partner advising emerging-growth technology and life-sciences companies and investors across corporate and venture-financing matters.",
+          "source": "public_employer_profile"
+        },
+        "actively_investing": {
+          "state": "unknown",
+          "value": null,
+          "basis": "evidence_required",
+          "reason": "Requires a dated public signal inside the recency window. Absence downgrades to unknown; it never implies false, and a job title alone is not evidence."
+        },
+        "changes_since_last": {
+          "state": "baseline",
+          "value": [],
+          "reason": "First observation of this record. A change list needs a prior accepted refresh to diff against."
+        }
+      },
       "context_status": "blocked_missing_credentials",
       "context_receipt": null,
       "context_extract": null,
       "metrics": {
-        "field_coverage": 100,
+        "field_coverage": 50,
         "identity_evidence": 100,
         "employer_evidence": 100,
         "role_evidence": 92,
@@ -75,11 +132,68 @@
       "unknowns": [
         "No live Context.dev receipt in the committed baseline"
       ],
+      "enrichment_fields": {
+        "email": {
+          "state": "not_retrieved",
+          "value": null,
+          "reason": "Contact data is withheld in showcase mode. A production run resolves this field and marks it verified, accept_all, unknown, bounced, or candidate before any writeback."
+        },
+        "phone": {
+          "state": "not_retrieved",
+          "value": null,
+          "reason": "Optional field. Withheld in showcase mode for the same reason as email."
+        },
+        "industries": {
+          "state": "retrieved",
+          "value": [
+            "Technology",
+            "Venture capital",
+            "Corporate strategy"
+          ],
+          "source": "public_employer_profile"
+        },
+        "title": {
+          "state": "retrieved",
+          "value": "Chair and Partner",
+          "source": "public_employer_profile"
+        },
+        "organization": {
+          "state": "retrieved",
+          "value": "Goodwin",
+          "source": "public_employer_profile"
+        },
+        "location": {
+          "state": "retrieved",
+          "value": "Silicon Valley / San Francisco",
+          "source": "public_employer_profile"
+        },
+        "linkedin_headline": {
+          "state": "unknown",
+          "value": null,
+          "source": null
+        },
+        "linkedin_about": {
+          "state": "retrieved",
+          "value": "Goodwin identifies Anthony McCusker as its Chair and a partner advising technology companies and investors across venture financings and the corporate life cycle.",
+          "source": "public_employer_profile"
+        },
+        "actively_investing": {
+          "state": "unknown",
+          "value": null,
+          "basis": "evidence_required",
+          "reason": "Requires a dated public signal inside the recency window. Absence downgrades to unknown; it never implies false, and a job title alone is not evidence."
+        },
+        "changes_since_last": {
+          "state": "baseline",
+          "value": [],
+          "reason": "First observation of this record. A change list needs a prior accepted refresh to diff against."
+        }
+      },
       "context_status": "blocked_missing_credentials",
       "context_receipt": null,
       "context_extract": null,
       "metrics": {
-        "field_coverage": 100,
+        "field_coverage": 50,
         "identity_evidence": 100,
         "employer_evidence": 100,
         "role_evidence": 89,
@@ -106,11 +220,68 @@
       "unknowns": [
         "No live Context.dev receipt in the committed baseline"
       ],
+      "enrichment_fields": {
+        "email": {
+          "state": "not_retrieved",
+          "value": null,
+          "reason": "Contact data is withheld in showcase mode. A production run resolves this field and marks it verified, accept_all, unknown, bounced, or candidate before any writeback."
+        },
+        "phone": {
+          "state": "not_retrieved",
+          "value": null,
+          "reason": "Optional field. Withheld in showcase mode for the same reason as email."
+        },
+        "industries": {
+          "state": "retrieved",
+          "value": [
+            "Technology",
+            "Venture capital",
+            "Growth equity"
+          ],
+          "source": "public_employer_profile"
+        },
+        "title": {
+          "state": "retrieved",
+          "value": "Partner",
+          "source": "public_employer_profile"
+        },
+        "organization": {
+          "state": "retrieved",
+          "value": "Goodwin",
+          "source": "public_employer_profile"
+        },
+        "location": {
+          "state": "retrieved",
+          "value": "Boston / New York",
+          "source": "public_employer_profile"
+        },
+        "linkedin_headline": {
+          "state": "unknown",
+          "value": null,
+          "source": null
+        },
+        "linkedin_about": {
+          "state": "retrieved",
+          "value": "Goodwin describes Pat Mitchell as a Technology partner advising companies and investors on venture-capital, growth-equity, private-equity, and strategic transactions.",
+          "source": "public_employer_profile"
+        },
+        "actively_investing": {
+          "state": "unknown",
+          "value": null,
+          "basis": "evidence_required",
+          "reason": "Requires a dated public signal inside the recency window. Absence downgrades to unknown; it never implies false, and a job title alone is not evidence."
+        },
+        "changes_since_last": {
+          "state": "baseline",
+          "value": [],
+          "reason": "First observation of this record. A change list needs a prior accepted refresh to diff against."
+        }
+      },
       "context_status": "blocked_missing_credentials",
       "context_receipt": null,
       "context_extract": null,
       "metrics": {
-        "field_coverage": 100,
+        "field_coverage": 50,
         "identity_evidence": 100,
         "employer_evidence": 100,
         "role_evidence": 86,
