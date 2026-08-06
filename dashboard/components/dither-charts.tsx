@@ -5,7 +5,7 @@ type ProfileMetric = {
     identity_evidence: number;
     employer_evidence: number;
     role_evidence: number;
-    sponsor_relevance: number;
+    evidence_recency: number;
     extraction_receipt: number;
   };
 };
@@ -14,7 +14,7 @@ const COLORS = ["var(--cyan)", "var(--acid)", "var(--amber)"];
 
 export function CoverageBars({ profiles }: { profiles: ProfileMetric[] }) {
   return (
-    <div className="coverage-chart" role="img" aria-label="Professional field coverage: all three profiles have complete public baseline fields">
+    <div className="coverage-chart" role="img" aria-label="Field coverage across the subjects in this run">
       <div className="chart-scale" aria-hidden="true">
         <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
       </div>
@@ -47,7 +47,7 @@ const axes = [
   { key: "identity_evidence", label: "Identity" },
   { key: "employer_evidence", label: "Employer" },
   { key: "role_evidence", label: "Role" },
-  { key: "sponsor_relevance", label: "Sponsor link" },
+  { key: "evidence_recency", label: "Sponsor link" },
   { key: "extraction_receipt", label: "API receipt" },
 ] as const;
 
@@ -62,8 +62,8 @@ export function EvidenceRadar({ profiles }: { profiles: ProfileMetric[] }) {
   return (
     <div className="radar-wrap">
       <svg className="radar" viewBox="0 0 260 260" role="img" aria-labelledby="radar-title radar-desc">
-        <title id="radar-title">Average evidence quality across the three profiles</title>
-        <desc id="radar-desc">Identity and employer are fully corroborated, roles are strongly corroborated, sponsor relevance is firm-level, and no live Context API receipt is available.</desc>
+        <title id="radar-title">Average evidence quality across the subjects in this run</title>
+        <desc id="radar-desc">Component scores for identity, employer, role, evidence recency, and retrieval receipt, averaged across the run.</desc>
         <defs>
           <pattern id="radar-dots" width="7" height="7" patternUnits="userSpaceOnUse">
             <circle cx="1.5" cy="1.5" r="1.2" fill="var(--cyan)" />

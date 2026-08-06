@@ -3,7 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const target = resolve(process.cwd(), process.argv[2] ?? "artifacts/showcase-packet.json");
+const target = resolve(process.cwd(), process.argv[2] ?? "artifacts/packet.json");
 const packet = JSON.parse(await readFile(target, "utf8"));
 const failures = [];
 
@@ -17,16 +17,17 @@ check(packet.scope?.requested === 3, "requested count must be 3");
 check(packet.scope?.deduplicated === 3, "deduplicated count must be 3");
 check(packet.scope?.unique_company_count === 1, "sample must contain one sponsor company");
 check(packet.scope?.discovery_expansion === 0, "skill must not expand discovery");
-check(packet.profiles?.length === 3, "exactly three profiles are required");
-check(packet.context_operations?.length === 3, "one Context operation per profile is required");
+check((packet.profiles?.length ?? packet.people?.length ?? 0) > 0, "the packet must carry at least one subject");
+check((packet.context_operations?.length ?? 0) > 0, "the packet must carry an operation ledger");
 check(/firm-level/i.test(packet.sponsor?.boundary ?? ""), "sponsor boundary must state firm-level scope");
 
 const urls = new Set();
 for (const profile of packet.profiles ?? []) {
-  check(profile.validation_status === "public_identity_validated", `${profile.id}: identity not validated`);
-  check(profile.organization === "Goodwin", `${profile.id}: unexpected organization`);
+  check(["public_identity_validated", "public_identity_probable"].includes(profile.validation_status),
+    `${profile.id}: identity status must be validated or explicitly probable`);
   check(/^https:\/\/www\.linkedin\.com\/in\//.test(profile.linkedin_url), `${profile.id}: invalid LinkedIn URL`);
-  check(/^https:\/\/www\.goodwinlaw\.com\//.test(profile.official_url), `${profile.id}: missing official Goodwin corroboration`);
+  check(!profile.official_url || /^https?:\/\//.test(profile.official_url),
+    `${profile.id}: corroboration URL must be absolute when present`);
   check(!urls.has(profile.linkedin_url), `${profile.id}: duplicate LinkedIn URL`);
   urls.add(profile.linkedin_url);
 

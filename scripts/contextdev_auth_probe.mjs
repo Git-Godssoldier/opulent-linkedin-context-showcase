@@ -2,11 +2,17 @@
 
 import { ENDPOINT } from "./contextdev_people.mjs";
 
+/**
+ * Confirms the endpoint rejects an unauthenticated call. It probes auth, not a person, so
+ * it sends a placeholder identifier rather than anyone's real profile — the request is
+ * expected to be refused before the identifier is ever looked at.
+ */
+
 const response = await fetch(ENDPOINT, {
   method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({
-    identifiers: { linkedinUrl: "https://www.linkedin.com/in/andrew-pusar-47108120" },
+    identifiers: { linkedinUrl: "https://www.linkedin.com/in/auth-probe-placeholder" },
     timeoutMS: 5000,
     tags: ["client:opulent", "app:linkedin-context-showcase", "run:auth-probe", "env:local"],
   }),

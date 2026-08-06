@@ -19,7 +19,7 @@ Render a compact evidence console rather than a generic analytics template:
 2. Scope strip: three known URLs, one sponsor firm, zero discovery expansion.
 3. Dither coverage bars: professional field coverage by profile.
 4. Dither evidence radar: identity, employer, role, sponsor relevance, and extraction receipt dimensions.
-5. Three profile dossiers with clickable LinkedIn and official employer sources.
+5. One dossier route per subject, with clickable LinkedIn and first-party employer sources.
 6. Context operation ledger showing planned/executed/blocked state per URL.
 7. Sponsor boundary note that prevents individual-level overclaiming.
 

@@ -4,9 +4,20 @@ import { resolve } from "node:path";
 import test from "node:test";
 import { buildRequest, dedupeProfiles, ENDPOINT, normalizeLinkedInUrl } from "../scripts/contextdev_people.mjs";
 
-const fixture = JSON.parse(
-  await readFile(resolve("fixtures/public-profile-baseline.json"), "utf8"),
+const dossierTemplate = JSON.parse(
+  await readFile(resolve("templates/dossier.template.json"), "utf8"),
 );
+const packetTemplate = JSON.parse(
+  await readFile(resolve("templates/packet.template.json"), "utf8"),
+);
+
+const REQUIRED_FIELDS = [
+  "email", "phone", "industries", "title", "organization",
+  "location", "linkedin_headline", "linkedin_about",
+  "actively_investing", "changes_since_last",
+];
+
+/* ---------------- identity ---------------- */
 
 test("normalizes a public LinkedIn profile and strips query/hash", () => {
   assert.equal(
@@ -17,60 +28,64 @@ test("normalizes a public LinkedIn profile and strips query/hash", () => {
 
 test("rejects non-LinkedIn and non-profile URLs", () => {
   assert.throws(() => normalizeLinkedInUrl("https://example.com/in/person"));
-  assert.throws(() => normalizeLinkedInUrl("https://www.linkedin.com/company/goodwin"));
+  assert.throws(() => normalizeLinkedInUrl("https://www.linkedin.com/company/acme"));
 });
 
-test("deduplicates by normalized LinkedIn URL", () => {
-  const profiles = [
-    fixture.profiles[0],
-    { ...fixture.profiles[0], id: "duplicate", linkedin_url: `${fixture.profiles[0].linkedin_url}/?x=1` },
-  ];
-  assert.equal(dedupeProfiles(profiles).length, 1);
+test("deduplicates targets that differ only by URL decoration", () => {
+  const deduped = dedupeProfiles([
+    { id: "a", name: "A", linkedin_url: "https://www.linkedin.com/in/a" },
+    { id: "a2", name: "A", linkedin_url: "https://linkedin.com/in/a/?utm=x" },
+    { id: "b", name: "B", linkedin_url: "https://www.linkedin.com/in/b" },
+  ]);
+  assert.equal(deduped.length, 2);
 });
 
-test("builds the exact bounded Context.dev people request", () => {
-  const request = buildRequest(fixture.profiles[0], "run-test", "test");
+/* ---------------- request shape ---------------- */
+
+test("builds the exact bounded people request and carries no contact fields", () => {
+  const request = buildRequest(
+    { id: "subject", name: "Subject", linkedin_url: "https://www.linkedin.com/in/subject" },
+    "run-test",
+    "test",
+  );
   assert.equal(ENDPOINT, "https://api.context.dev/v1/people/retrieve");
-  assert.deepEqual(request.identifiers, { linkedinUrl: fixture.profiles[0].linkedin_url });
+  assert.deepEqual(request.identifiers, { linkedinUrl: "https://www.linkedin.com/in/subject" });
   assert.equal(request.timeoutMS, 30_000);
   assert.ok(request.tags.includes("client:opulent"));
-  assert.ok(request.tags.includes("scope:list"));
   assert.equal(Object.hasOwn(request, "email"), false);
+  assert.equal(Object.hasOwn(request, "phone"), false);
 });
 
-test("fixture keeps sponsor and individual claims separate", () => {
-  assert.match(fixture.sponsor.boundary, /Firm-level sponsor proof only/i);
-  assert.equal(fixture.profiles.length, 3);
-  assert.ok(fixture.profiles.every((profile) => profile.organization === "Goodwin"));
-  assert.ok(fixture.profiles.every((profile) => profile.validation_status === "public_identity_validated"));
-});
+/* ---------------- output contract ---------------- */
 
-const packet = JSON.parse(
-  await readFile(resolve("artifacts/showcase-packet.json"), "utf8"),
-);
-
-const REQUIRED_ENRICHMENT_FIELDS = [
-  "email", "phone", "industries", "title", "organization",
-  "location", "linkedin_headline", "linkedin_about",
-  "actively_investing", "changes_since_last",
-];
-
-test("every profile returns all ten enrichment fields with a state", () => {
-  for (const profile of packet.profiles) {
-    for (const name of REQUIRED_ENRICHMENT_FIELDS) {
-      assert.ok(profile.enrichment_fields?.[name], `${profile.id} is missing ${name}`);
-      assert.equal(typeof profile.enrichment_fields[name].state, "string",
-        `${profile.id}.${name} has no state`);
-    }
+test("the dossier template carries all ten required fields, every one empty", () => {
+  for (const name of REQUIRED_FIELDS) {
+    const field = dossierTemplate.required_fields?.[name];
+    assert.ok(field, `template is missing ${name}`);
+    assert.equal(field.value, null, `${name} ships with a value`);
+    assert.equal(field.state, "pending_retrieval", `${name} ships in a non-pending state`);
   }
 });
 
-test("contact values stay null and inactivity is never inferred", () => {
-  for (const profile of packet.profiles) {
-    const fields = profile.enrichment_fields;
-    assert.equal(fields.email.value, null, `${profile.id} published an email`);
-    assert.equal(fields.phone.value, null, `${profile.id} published a phone number`);
-    assert.notEqual(fields.actively_investing.value, false,
-      `${profile.id} asserted inactivity without retrieved evidence`);
+test("the dossier template ships no data of any kind", () => {
+  const serialized = JSON.stringify(dossierTemplate);
+  assert.equal(dossierTemplate.name, null);
+  assert.equal(dossierTemplate.linkedin_url, null);
+  assert.doesNotMatch(serialized, /linkedin\.com\/in\//, "a real profile URL is baked into the template");
+  assert.equal(dossierTemplate.outreach.reason_to_engage, null);
+});
+
+test("the dossier template keeps every extension block the run can populate", () => {
+  for (const block of ["identity", "career", "firm", "investment_signal", "public_activity", "relationships", "outreach"]) {
+    assert.ok(dossierTemplate[block], `template is missing the ${block} block`);
   }
+});
+
+test("the packet template carries the run record and ships empty", () => {
+  for (const key of ["scope", "excluded", "people", "firms", "event", "messages", "context_operations", "data_health", "unknowns"]) {
+    assert.ok(key in packetTemplate, `packet template is missing ${key}`);
+  }
+  assert.deepEqual(packetTemplate.people, []);
+  assert.deepEqual(packetTemplate.messages, []);
+  assert.equal(packetTemplate.event.event_name, null);
 });

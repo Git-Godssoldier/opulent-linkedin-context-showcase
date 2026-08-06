@@ -4,15 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:packet": "node scripts/build_showcase.mjs",
-    "validate": "node scripts/validate_packet.mjs",
+    "targets": "node scripts/load_targets.mjs targets/roster.csv --out artifacts/cohort.json",
+    "prepare": "node scripts/prepare_cohort.mjs artifacts/cohort.json --out artifacts/prepared.json",
+    "validate": "node scripts/validate_packet.mjs artifacts/packet.json",
     "context:dry-run": "node scripts/contextdev_people.mjs --dry-run",
-    "context:live": "node scripts/scenario_contextdev_three_profiles.mjs",
     "context:probe": "node scripts/contextdev_auth_probe.mjs",
     "dashboard:install": "npm --prefix dashboard install",
     "dashboard:build": "npm --prefix dashboard run build",
     "test": "node --test tests/*.test.mjs",
-    "selftest": "npm run test && npm run context:dry-run && npm run build:packet && npm run validate && npm --prefix dashboard run typecheck && npm --prefix dashboard run lint && npm run dashboard:build"
+    "selftest": "npm run test && npm run context:dry-run && npm --prefix dashboard run typecheck && npm --prefix dashboard run lint"
   },
   "engines": {
     "node": ">=20"

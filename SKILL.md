@@ -158,10 +158,6 @@ State which capabilities ran, which were skipped and why, what the run cost agai
 
 *Done when: counts, credits, blocks, and unknowns are all stated.*
 
-## Note on the bundled prior demo
-
-`fixtures/public-profile-baseline.json`, the `Goodwin` assertions in `scripts/validate_packet.mjs` and `tests/contracts.test.mjs`, and the sponsor section in `dashboard/app/page.tsx` belong to an earlier three-profile demonstration. They are retained so the repository keeps building, and they are **not** this skill's input. The roster is. Re-point them at the roster before the first client-facing run, or delete them.
-
 ## Boundaries
 
 - **A supplied list only.** No discovery, no cohort expansion, no name-only matching.

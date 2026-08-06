@@ -153,17 +153,17 @@ function parseArgs(argv) {
     if (arg === "--dry-run") args.dryRun = true;
     else if (arg === "--out") args.out = argv[++index];
     else if (arg === "--environment") args.environment = argv[++index];
+    else if (arg === "--cohort") args.cohort = argv[++index];
     else throw new Error(`Unknown argument: ${arg}`);
   }
   return args;
 }
 
-export async function run({ dryRun = false, out = null, environment = "local" } = {}) {
-  const baseline = JSON.parse(
-    await readFile(resolve(ROOT, "fixtures/public-profile-baseline.json"), "utf8"),
-  );
-  const profiles = dedupeProfiles(baseline.profiles);
-  if (profiles.length !== 3) throw new Error(`Expected exactly 3 unique profiles; received ${profiles.length}`);
+export async function run({ dryRun = false, out = null, environment = "local", cohort = "artifacts/cohort.json" } = {}) {
+  const source = JSON.parse(await readFile(resolve(ROOT, cohort), "utf8"));
+  // load_targets emits { targets: [...] }; accept a bare array too.
+  const profiles = dedupeProfiles(source.targets ?? source.profiles ?? source);
+  if (profiles.length === 0) throw new Error(`No targets in ${cohort}. Run the roster loader first.`);
 
   const runId = `showcase-${new Date().toISOString().replace(/[:.]/g, "-")}`;
   const requests = profiles.map((profile) => ({
