@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "targets": "node scripts/load_targets.mjs targets/roster.csv --out artifacts/cohort.json",
-    "prepare": "node scripts/prepare_cohort.mjs artifacts/cohort.json --out artifacts/prepared.json",
+    "calls": "node scripts/run_calls.mjs",
+    "event": "node scripts/scrape_event.mjs",
+    "assemble": "node scripts/assemble.mjs",
+    "email": "node scripts/render_email.mjs",
     "validate": "node scripts/validate_packet.mjs artifacts/packet.json",
-    "context:dry-run": "node scripts/contextdev_people.mjs --dry-run",
+    "dashboard": "npm --prefix dashboard run build && npm --prefix dashboard run start",
     "context:probe": "node scripts/contextdev_auth_probe.mjs",
-    "dashboard:install": "npm --prefix dashboard install",
-    "dashboard:build": "npm --prefix dashboard run build",
-    "test": "node --test tests/*.test.mjs",
-    "selftest": "npm run test && npm run context:dry-run && npm --prefix dashboard run typecheck && npm --prefix dashboard run lint"
+    "test": "node --test tests/*.test.mjs"
   },
   "engines": {
     "node": ">=20"
