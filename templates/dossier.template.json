@@ -142,5 +142,17 @@
     "receipt": null,
     "credits": null
   },
-  "unknowns": []
+  "unknowns": [],
+  "outreach": {
+    "reason_to_engage": null,
+    "reason_source_url": null,
+    "reason_observed_at": null,
+    "reason_rank": null,
+    "draft_html_path": null,
+    "draft_text_path": null,
+    "subject": null,
+    "preview_text": null,
+    "review_state": null,
+    "review_note": null
+  }
 }

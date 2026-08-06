@@ -1,14 +1,14 @@
 ---
 name: opulent-linkedin-context-showcase
-description: Take a supplied roster of people with LinkedIn URLs and run it end to end — validate identities, retrieve and extract structured profiles through Context.dev, assemble a provenance-carrying dossier per person, and render a Dither Kit dashboard. Use when demonstrating Opulent and Context.dev enrichment on a known list, building an evidence-backed person dossier, or producing a client-ready extraction report. This skill works a list you already have; it does not discover people, bypass access controls, bulk scrape, or send outreach.
+description: Take a supplied roster of people with LinkedIn URLs and run it end to end — validate identities, retrieve and extract structured profiles through Context.dev, assemble a provenance-carrying dossier per person, scrape the upcoming event, draft an event invitation per person, and render a Dither Kit dashboard. Use when demonstrating Opulent and Context.dev enrichment on a known list, building an evidence-backed person dossier, or producing a client-ready extraction report. This skill works a list you already have; it drafts but never sends, and it does not discover people, bypass access controls, or bulk scrape.
 license: MIT
 ---
 
 # Opulent LinkedIn Context Showcase
 
-Turn a roster into a dossier. A list of names and URLs goes in; a set of source-backed person records and a dashboard that shows the whole chain comes out.
+Turn a roster into a dossier and a drafted invitation. A list of names and URLs goes in; source-backed person records, a scraped event, one message per person, and a dashboard showing the whole chain come out.
 
-The demonstration is the chain, not the data. Anyone can print a profile. What this shows is that each identity was fixed before retrieval, each field carries the page it came from, each unknown is named rather than filled, and the run reports what it cost.
+The demonstration is the chain, not the data. Anyone can print a profile. What this shows is that each identity was fixed before retrieval, each field carries the page it came from, every sentence in the outreach traces back to one of those fields, each unknown is named rather than filled, and the run reports what it cost.
 
 ## Before you start
 
@@ -17,12 +17,14 @@ Read in this order:
 1. `references/contextdev-capabilities.md` — every provider call, its credit cost, and which one belongs at each stage.
 2. `references/dossier-contract.md` — the output shape, the ten required fields, and the rules the validator enforces.
 3. `references/dashboard-brief.md` — the two-layer dashboard, the chart contract, and what may never be styled as verified.
-4. `references/evidence-policy.md` — identity, claim, and privacy boundaries.
+4. `references/event-and-outreach.md` — scraping the event page, choosing the reason to engage, and building the message.
+5. `references/evidence-policy.md` — identity, claim, and privacy boundaries.
 
 Two templates define the output shape and ship empty on purpose:
 
 - `templates/dossier.template.json` — one person: the ten required fields plus identity integrity, career shape, firm intelligence, investment signal, public activity, and relationships. Every value null, every field carrying its own state.
-- `templates/packet.template.json` — the run: scope, excluded rows, people, firms, operation ledger, data health, unknowns.
+- `templates/packet.template.json` — the run: scope, excluded rows, people, firms, event brief, operation ledger, data health, unknowns.
+- `templates/event-invitation.tsx` — the outreach message. React Email on the Dither theme, adapted from the Dither welcome template with one change: a single call to action instead of three.
 
 Fill them. Do not reshape them — the validator and the dashboard both read this contract.
 
@@ -86,7 +88,17 @@ For the fields no profile can answer — whether someone is still actively inves
 
 *Done when: every evidence-based field is either supported by a dated source or explicitly unknown.*
 
-### 7. Assemble the dossiers
+### 7. Scrape the upcoming event
+
+A browser session, not a fetch — the event pages are JavaScript-rendered. Read the page; register for nothing and submit no form.
+
+Capture the event brief: name, date, time, timezone, city, venue and its confirmation status, hosts, description, speakers, agenda, sponsors, and any registered or remaining count the page actually shows. Stamp every field with the URL and `scraped_at`.
+
+**Only a number printed on the page may appear in a message.** Where the page shows no capacity, the message says nothing about scarcity.
+
+*Done when: the brief is complete or each missing field is named, and nothing on the page was interacted with.*
+
+### 8. Assemble the dossiers
 
 Fill the record from steps 4–6. Every field gets its value, state, confidence, source, source URL, and observation date. Where the roster and the public record disagree, record the variance rather than overwriting either.
 
@@ -94,7 +106,7 @@ Contact fields come only from a verification provider. A pattern-inferred addres
 
 *Done when: every person carries all ten required fields, and every `Verified` field carries a source URL.*
 
-### 8. Validate
+### 9. Validate
 
 ```bash
 node scripts/validate_packet.mjs artifacts/packet.json
@@ -104,15 +116,25 @@ Exits non-zero on any breach: a missing field, a contact value without a verific
 
 *Done when: the validator exits zero.*
 
-### 9. Render the dashboard
+### 10. Draft one message per person
 
-Build the two-layer dashboard and one dossier route per person. Decision layer first — scope, cohort, analytics, excluded rows. Audit layer collapsed — operation ledger, data health, provenance appendix, unknowns.
+Choose the single reason to engage from the dossier — strongest dated signal first, prior attendance next, themed public activity next, plain fit last. It travels at the strength the evidence supports.
+
+Fill `templates/event-invitation.tsx` from the dossier and the event brief. Order inside the message: the reason it arrived now, the event, who is in the room, one action. Subject and preview written last, as a pair. Any prop without evidence behind it is omitted and its section does not render.
+
+Render each message to HTML and plain text, and preview at desktop and 390px.
+
+*Done when: every queued person has a draft whose every claim traces to a dossier field, and no draft has been sent.*
+
+### 11. Render the dashboard
+
+Build the two-layer dashboard, one dossier route per person, and the rendered message beside each dossier so a reviewer sees the claim and its source on one screen. Decision layer first — scope, cohort, analytics, excluded rows. Audit layer collapsed — operation ledger, data health, provenance appendix, unknowns.
 
 Use the committed Dither Kit components for every chart.
 
 *Done when: the export builds, the overview and one dossier have been inspected at desktop and at 390px, and the console is clean.*
 
-### 10. Report the run
+### 12. Report the run
 
 State what was retrieved, what was blocked and why, what it cost against budget, and what remains unknown. The unknowns section earns more trust than the findings do.
 
@@ -129,7 +151,9 @@ State what was retrieved, what was blocked and why, what it cost against budget,
 - **Nothing invented.** No guessed email, phone, URL, activity status, or relationship. An absent value is reported absent.
 - **No claim beyond the evidence.** A person appearing in this cohort is not thereby a member, attendee, customer, or endorser of anything. Firm-level facts stay at the firm level.
 - **Contact data is handled, never published.** Values live in the private record; the public artifact carries the state.
-- **Nothing sends.** This skill produces a dossier and a dashboard. It writes to no CRM and messages no one.
+- **Nothing sends.** This skill produces a dossier, a dashboard, and a draft. Delivery is the community's existing system, and a person puts it there.
+- **The event page is read, never touched.** No registration, no form, no click that changes state.
+- **No invented scarcity.** Capacity claims come from the page or are absent.
 
 ## Failure modes worth naming
 
