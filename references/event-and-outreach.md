@@ -43,6 +43,8 @@ Relationship language is precise or absent. Co-attendance is co-attendance. It i
 
 ## Building the message
 
+Load `references/writing-quality.md` first — the word-level rules apply here before any of the structure below. The em dash is the single strongest tell, and an invitation that reads as generated will have its evidence discounted along with its prose.
+
 Use `templates/event-invitation.tsx`. It is the Dither React Email template adapted for this job, with one deliberate departure from the source: the welcome layout carries three calls to action, and this one carries a single RSVP link.
 
 Fill the props from the run:
@@ -76,6 +78,36 @@ Specific beats clever. A subject that says what is inside keeps its promise, and
 ### Length
 
 Shorter is always better. If a paragraph is not carrying the reason, the event, or the action, it goes.
+
+## House voice: the community's own sponsor thread
+
+The only approved outreach the community has supplied is one real sponsor sequence. Read it as the voice to match, and note what it does rather than what a template would do.
+
+**It opens with scale, not story.**
+
+> Between VC Village and MATCH HOUSE we are at well over 1000+ investor members/attendees and even more founders!
+
+For a sponsor, audience scale *is* the reason to care — they are buying access to the room. This is the one case where leading with the community's own numbers is correct. An attendee invitation that opened this way would be leading with the wrong subject.
+
+**It answers audience questions with ranges and examples, not adjectives.**
+
+> Founders are all over the place and range from early stage, under $100k in ARR, through late stage, $2m ARR plus.
+>
+> GP LP Dinners have a lot of emerging managers which is great.
+
+Plus a named prior event and the returning-versus-new split. Vague audience answers are what stall sponsor threads; specifics are what move them.
+
+**It asks for one thing at a time.** Interest first. Materials, invite lists, and payment come after agreement, each in its own message — not bundled into the opener.
+
+**Its stated preference is brevity.** In the community's own words, across several rounds of edits:
+
+> Shorter is always better haha!
+
+The sponsor description that finally passed is two sentences: who they are, and what they do for this specific audience. No history, no adjectives, no claim the sponsor did not make.
+
+**It gives lead time.** Sponsors are asked roughly two months out. Surfacing one three weeks before the event has already lost the deal it recommends.
+
+Match this register. Where this file and the sponsor thread disagree, the thread wins — it is the client's actual voice, and these rules are a reconstruction of it.
 
 ## Review before anything sends
 
