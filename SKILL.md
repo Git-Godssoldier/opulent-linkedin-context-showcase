@@ -32,6 +32,26 @@ Use `user_list` mode. Normalize and deduplicate exact LinkedIn URLs. Do not gues
 
 For the bundled showcase, the maximum is three unique people, three `POST /people/retrieve` calls, zero company calls, zero web extraction calls, and zero monitors.
 
+### 1b. Loading a client target list
+
+A roster arrives as name, owner, city, organization, role — the shape a community actually
+keeps. Load it and let it reject what it cannot identify:
+
+```bash
+node scripts/load_targets.mjs targets/<file>.csv --out fixtures/<cohort>.json
+```
+
+**A row without an exact LinkedIn profile URL is rejected, never resolved by search.** A name
+and an employer is not an identity. The wrong match here does not stay local — it becomes an
+enrichment record and then a platform writeback against the wrong person. Supplying the URL is
+the client's step, from the platform export that already holds it.
+
+The loader exits non-zero and names every blocked row, so a partially-identified list fails
+loudly instead of silently shrinking the cohort.
+
+Client lists stay out of the repository. `targets/*.csv` is gitignored except the synthetic
+`example-targets.csv`, which exists to show the column shape.
+
 ### 2. Validate identity and affiliation separately
 
 For each person, retain:
